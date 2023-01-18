@@ -1,0 +1,74 @@
+service: aws-metric-api
+
+frameworkVersion: '3'
+variablesResolutionMode: 20210326
+useDotenv: true
+configValidationMode: error
+
+provider:
+  name: aws
+  runtime: python3.8
+  lambdaHashingVersion: '20201221'
+  stage: ${opt:stage, 'default'}
+  region: ${opt:region, env:AWS_DEFAULT_REGION, 'us-west-1'}
+  stackTags:
+    Type: App
+    GitRepo: aws-metric-api
+  stackName: ${self:service}
+  versionFunctions: false
+  timeout: ${opt:function-timeout-seconds, '60'}
+  deploymentBucket:
+    name: ${ssm:/serverless-s3-bucket}
+    blockPublicAccess: true
+    serverSideEncryption: AES256
+  vpc:
+    securityGroupIds: ${ssm:/metric_vpc_security_groups, null}
+    subnetIds: ${ssm:/metric_vpc_subnets, null}
+  iam:
+    role: !Sub arn:aws:iam::${AWS:AccountId}:role/metric_api_serverless_role
+    deploymentRole: arn:aws:iam::${AWS:AccountId}:role/MetricRoleForServerlessDeploy
+  tracing:
+    apiGateway: true
+    lambda: ${opt:enable-xray, 'true'}
+  kmsKeyArn: ${file(./util/kms.js):getKmsKeyArn}
+  environment:
+    CONNECT_TIMEOUT_SECONDS: ${opt:connect-timeout-seconds, '60'}
+    READ_TIMEOUT_SECONDS: ${opt:read-timeout-seconds, '60'}
+    MAX_RETRIES: ${opt:max-retries, '10'}
+    API_HOST: ${ssm:/ApiHost, ''}
+    LOG_LEVEL: ${opt:log-level, 'INFO'}
+    ENABLE_XRAY: ${opt:enable-xray, 'true'}
+    REGION: ${self:provider.region}
+  logRetentionInDays: 90
+  memorySize: 128
+
+package:
+  excludeDevDependencies: true
+  individually: true
+  exclude:
+    - ./**
+
+functions:
+  api:
+    name: aws-metric-api
+    description: Provide AWS Metric API for statistics
+    handler: wsgi_handler.handler
+    memorySize: 1024
+    layers:
+      - { Ref: PythonRequirementsLambdaLayer }
+    package:
+      include:
+        - api.py
+        - lib/**
+    events:
+      - http: ANY /
+      - http: 'ANY {proxy+}'
+    environment:
+      TTL_DAYS: ${opt:ttl-days, '2'}
+
+plugins:
+  - '@serverless/safeguards-plugin'
+  - serverless-wsgi
+  - serverless-python-requirements
+  - serverless-plugin-ifelse
+  - serverless-prune-plugin
