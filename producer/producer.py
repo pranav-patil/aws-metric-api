@@ -10,7 +10,7 @@ import exrex
 firehose_name = ""
 firehose_client = ""
 sleep_time_msec = 500
-aws_region = "us-east-1"
+aws_region = "us-west-1"
 def generate_app_logs(firehose_stream):
     payload = {
         "version": 2,
@@ -18,7 +18,7 @@ def generate_app_logs(firehose_stream):
         "user": "1231313231",
         "message": exrex.getone('[a-z]{200}'),
         "ts": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
-        "tenant_id": "4324234242",
+        "instance_id": "4324234242",
         "status": "success",
         "type": "configuration"
     }
