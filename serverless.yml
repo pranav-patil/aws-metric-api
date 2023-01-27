@@ -20,22 +20,20 @@ provider:
   deploymentBucket:
     name: ${ssm:/serverless-s3-bucket}
     blockPublicAccess: true
-    serverSideEncryption: AES256
-  vpc:
-    securityGroupIds: ${ssm:/metric_vpc_security_groups, null}
-    subnetIds: ${ssm:/metric_vpc_subnets, null}
+    serverSideEncryption: aws:kms
+    sseKMSKeyId: ${ssm:metric_serverless_kms_key, null}
   iam:
     role: !Sub arn:aws:iam::${AWS:AccountId}:role/metric_api_serverless_role
     deploymentRole: arn:aws:iam::${AWS:AccountId}:role/MetricRoleForServerlessDeploy
   tracing:
     apiGateway: true
     lambda: ${opt:enable-xray, 'true'}
-  kmsKeyArn: ${file(./util/kms.js):getKmsKeyArn}
+  kmsKeyArn: ${ssm:lambda_kms_key, null}
   environment:
     CONNECT_TIMEOUT_SECONDS: ${opt:connect-timeout-seconds, '60'}
     READ_TIMEOUT_SECONDS: ${opt:read-timeout-seconds, '60'}
     MAX_RETRIES: ${opt:max-retries, '10'}
-    API_HOST: ${ssm:/ApiHost, ''}
+    API_HOST: ${ssm:ApiHost, ''}
     LOG_LEVEL: ${opt:log-level, 'INFO'}
     ENABLE_XRAY: ${opt:enable-xray, 'true'}
     REGION: ${self:provider.region}
@@ -61,10 +59,38 @@ functions:
         - api.py
         - lib/**
     events:
-      - http: ANY /
-      - http: 'ANY {proxy+}'
+      - http:
+          method: any
+          path: /
+      - http:
+          method: any
+          path: '{proxy+}'
     environment:
       TTL_DAYS: ${opt:ttl-days, '2'}
+      ATHENA_WORKGROUP: ${ssm:AthenaWorkGroup, ''}
+      STACK_NAME: ${sls:stage}
+
+custom:
+  resourceNamePrefix: ${self:service}-
+  cloudOneRegion: ${env:C1_REGION, 'us-1'}
+  awsAccountId: ${file(./util/sts.js):getAccountId}
+  wsgi:
+    app: api.app
+    pythonBin: python3
+    packRequirements: false
+
+  pythonRequirements:
+    usePipenv: true
+    dockerizePip: non-linux
+    slim: true
+    layer:
+      name: ${sls:stage}-metric-api-lib
+      description: Third-party packages used by metric api lambda functions
+      compatibleRuntimes:
+        - python3.8
+  prune:
+    automatic: true
+    number: 10
 
 plugins:
   - '@serverless/safeguards-plugin'

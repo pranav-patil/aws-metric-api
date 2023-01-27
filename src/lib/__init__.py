@@ -1,3 +1,3 @@
 """
-This package provides library helper modules for handlers.
+This package provides library helpers modules for handlers.
 """
