@@ -42,7 +42,7 @@ resource "aws_s3_bucket" "metric_data_athena_bucket" {
   force_destroy = true
   tags = {
     Name        = "${var.cluster_name}-metric-data-athena-bucket"
-    Environment = "demo"
+    Environment = var.env
   }
 }
 
@@ -69,7 +69,7 @@ resource "aws_s3_bucket" "audit_logs_backup_bucket" {
   force_destroy = true
   tags = {
     Name        = "${var.cluster_name}-audit-logs-backup-bucket"
-    Environment = "demo"
+    Environment = var.env
   }
 }
 
