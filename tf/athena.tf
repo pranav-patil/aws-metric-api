@@ -7,14 +7,14 @@ resource "aws_athena_workgroup" "metric_data" {
       selected_engine_version = "AUTO"
     }
     result_configuration {
-      output_location = "s3://${aws_s3_bucket.metric_data_athena_bucket.id}/output/"
+      output_location = "s3://${aws_s3_bucket.metric_data_bucket.id}/output/"
     }
   }
   force_destroy = true
 }
 
 locals {
-  updated_bucket_name = (replace("${aws_s3_bucket.metric_data_athena_bucket.id}", "-", "_"))
+  updated_bucket_name = (replace("${aws_s3_bucket.metric_data_bucket.id}", "-", "_"))
 }
 
 resource "aws_athena_named_query" "select_all_metric_data" {

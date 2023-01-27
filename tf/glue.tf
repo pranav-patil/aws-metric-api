@@ -8,7 +8,7 @@ resource "aws_glue_catalog_database" "aws_glue_metric_database" {
   }
 }
 
-resource "aws_glue_catalog_table" "audit_logs_table" {
+resource "aws_glue_catalog_table" "metric_table" {
   name          = "${replace(var.cluster_name, "-", "_")}_metric_table"
   database_name = aws_glue_catalog_database.aws_glue_metric_database.name
   description   = "metrics from applications"
@@ -26,7 +26,7 @@ resource "aws_glue_catalog_table" "audit_logs_table" {
     "projection.month.values"   = "08"
     "projection.day.type"       = "enum"
     "projection.day.values"     = "01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31"
-    "storage.location.template" = "s3://${aws_s3_bucket.metric_data_athena_bucket.id}/auditlogs/year=${"$"}{year}/month=${"$"}{month}/day=${"$"}{day}"
+    "storage.location.template" = "s3://${aws_s3_bucket.metric_data_bucket.id}/metrics/year=${"$"}{year}/month=${"$"}{month}/day=${"$"}{day}"
   }
 
   partition_keys {
@@ -43,17 +43,17 @@ resource "aws_glue_catalog_table" "audit_logs_table" {
   }
 
   storage_descriptor {
-    location      = "s3://${aws_s3_bucket.metric_data_athena_bucket.id}/auditlogs/"
+    location      = "s3://${aws_s3_bucket.metric_data_bucket.id}/metrics/"
     input_format  = "org.apache.hadoop.mapred.TextInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
 
     ser_de_info {
-      name                  = "${var.cluster_name}-audit-logs"
+      name                  = "${var.cluster_name}-metric-data"
       serialization_library = "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
 
       parameters = {
         "serialization.format" = 1
-        "key"                  = "appname,tenant_id,ts"
+        "key"                  = "appname,instance_id,ts"
       }
     }
     columns {
@@ -62,9 +62,9 @@ resource "aws_glue_catalog_table" "audit_logs_table" {
       comment = "version number for the message"
     }
     columns {
-      name    = "tenant_id"
+      name    = "instance_id"
       type    = "string"
-      comment = "tenantid as associated by C1C"
+      comment = "instance id associated with the application server"
     }
     columns {
       name    = "ts"
@@ -109,11 +109,11 @@ resource "aws_glue_catalog_table" "audit_logs_table" {
 }
 
 # Athena works with the table created by crawler??
-resource "aws_glue_crawler" "audit-logs-crawler" {
+resource "aws_glue_crawler" "metric-data-crawler" {
   count         = var.enable_crawler ? 1 : 0
   database_name = aws_glue_catalog_database.aws_glue_metric_database.name
-  name          = "${var.cluster_name}-audit-logs-crawler"
-  description   = "Crawler for audit logs from applications"
+  name          = "${var.cluster_name}-metric-data-crawler"
+  description   = "Crawler for metric data from applications"
   role          = aws_iam_role.glue_service_role.arn
   schedule      = "cron(0/20 * * * ? *)"
   recrawl_policy {
@@ -121,7 +121,7 @@ resource "aws_glue_crawler" "audit-logs-crawler" {
   }
 
   s3_target {
-    path = "s3://${var.cluster_name}-audit-logs-bucket"
+    path = "s3://${var.cluster_name}-metric-data-bucket"
   }
 
   schema_change_policy {

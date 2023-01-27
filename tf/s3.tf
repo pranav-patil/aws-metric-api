@@ -37,25 +37,25 @@ resource "aws_ssm_parameter" "serverless_state_bucket_name" {
   value       = aws_s3_bucket.serverless_state_bucket.bucket
 }
 
-resource "aws_s3_bucket" "metric_data_athena_bucket" {
-  bucket        = "${var.cluster_name}-metric-data-athena-bucket"
+resource "aws_s3_bucket" "metric_data_bucket" {
+  bucket        = "${var.cluster_name}-metric-data-bucket"
   force_destroy = true
   tags = {
-    Name        = "${var.cluster_name}-metric-data-athena-bucket"
+    Name        = "${var.cluster_name}-metric-data-bucket"
     Environment = var.env
   }
 }
 
-resource "aws_s3_bucket_acl" "audit_logs_bucket_acl" {
-  bucket = aws_s3_bucket.metric_data_athena_bucket.id
+resource "aws_s3_bucket_acl" "metric_data_bucket_acl" {
+  bucket = aws_s3_bucket.metric_data_bucket.id
   acl    = "private"
 }
 
-resource "aws_s3_bucket_lifecycle_configuration" "audit_logs_bucket_lifecycle" {
-  bucket = aws_s3_bucket.metric_data_athena_bucket.id
+resource "aws_s3_bucket_lifecycle_configuration" "metric_data_bucket_lifecycle" {
+  bucket = aws_s3_bucket.metric_data_bucket.id
 
   rule {
-    id     = "audit_logs_bucket_lifecycle"
+    id     = "metric_data_bucket_lifecycle"
     status = "Enabled"
 
     expiration {
@@ -64,25 +64,25 @@ resource "aws_s3_bucket_lifecycle_configuration" "audit_logs_bucket_lifecycle" {
   }
 }
 
-resource "aws_s3_bucket" "audit_logs_backup_bucket" {
-  bucket        = "${var.cluster_name}-audit-logs-backup-bucket"
+resource "aws_s3_bucket" "metric_data_backup_bucket" {
+  bucket        = "${var.cluster_name}-metric-data-backup-bucket"
   force_destroy = true
   tags = {
-    Name        = "${var.cluster_name}-audit-logs-backup-bucket"
+    Name        = "${var.cluster_name}-metric-data-backup-bucket"
     Environment = var.env
   }
 }
 
-resource "aws_s3_bucket_acl" "audit_logs_backup_bucket_acl" {
-  bucket = aws_s3_bucket.audit_logs_backup_bucket.id
+resource "aws_s3_bucket_acl" "metric_data_backup_bucket_acl" {
+  bucket = aws_s3_bucket.metric_data_backup_bucket.id
   acl    = "private"
 }
 
-resource "aws_s3_bucket_lifecycle_configuration" "audit_logs_backup_bucket_lifecycle" {
-  bucket = aws_s3_bucket.audit_logs_backup_bucket.id
+resource "aws_s3_bucket_lifecycle_configuration" "metric_data_backup_bucket_lifecycle" {
+  bucket = aws_s3_bucket.metric_data_backup_bucket.id
 
   rule {
-    id     = "audit_logs_backup_bucket_lifecycle"
+    id     = "metric_data_backup_bucket_lifecycle"
     status = "Enabled"
 
     expiration {

@@ -291,10 +291,10 @@ data "aws_iam_policy_document" "kinesis_firehose_access_bucket_assume_policy" {
     ]
 
     resources = [
-      aws_s3_bucket.metric_data_athena_bucket.arn,
-      "${aws_s3_bucket.metric_data_athena_bucket.arn}/*",
-      aws_s3_bucket.audit_logs_backup_bucket.arn,
-      "${aws_s3_bucket.audit_logs_backup_bucket.arn}/*"
+      aws_s3_bucket.metric_data_bucket.arn,
+      "${aws_s3_bucket.metric_data_bucket.arn}/*",
+      aws_s3_bucket.metric_data_backup_bucket.arn,
+      "${aws_s3_bucket.metric_data_backup_bucket.arn}/*"
     ]
   }
 }
@@ -348,14 +348,14 @@ data "aws_iam_policy_document" "glue_s3_bucket_assume_policy" {
     ]
 
     resources = [
-      aws_s3_bucket.metric_data_athena_bucket.arn,
-      "${aws_s3_bucket.metric_data_athena_bucket.arn}/*"
+      aws_s3_bucket.metric_data_bucket.arn,
+      "${aws_s3_bucket.metric_data_bucket.arn}/*"
     ]
   }
 }
 
 resource "aws_iam_role" "glue_service_role" {
-  name                 = "${var.cluster_name}-AWSGlueServiceRole-audit-logs"
+  name                 = "${var.cluster_name}-AWSGlueServiceRole-metrics"
   assume_role_policy   = data.aws_iam_policy_document.glue_assume_role.json
 }
 

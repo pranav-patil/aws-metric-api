@@ -20,7 +20,7 @@ def hello():
 
 
 @app.route("/metrics", methods=["GET"])
-def get_audit_logs():
+def get_metric():
     args = request.args
     start = args.get('start')
     stop = args.get('stop')
@@ -28,7 +28,7 @@ def get_audit_logs():
     order = args.get('order')
     next_token = args.get('next_token')
     if next_token:
-        return helper.fetch_audit_logs_next_page(next_token)
+        return helper.fetch_metric_next_page(next_token)
     return_string = verify_params(start, stop, limit, order)
     if len(return_string) > 0:
         return {
@@ -36,11 +36,11 @@ def get_audit_logs():
             "headers": {"content-type": "application/json"},
             "body": json.dumps({"message": return_string})
         }
-    return helper.fetch_audit_logs(start, stop, limit, order)
+    return helper.fetch_metric(start, stop, limit, order)
 
 @app.route("/metrics/clear", methods=["POST"])
-def clear_audit_logs():
-    return helper.empty_audit_logs_bucket()
+def clear_metric_data():
+    return helper.empty_metric_data_bucket()
 
 
 @app.errorhandler(HTTPException)

@@ -34,7 +34,7 @@ def main():
     """
     Main entrypoint.
     """
-    parser = argparse.ArgumentParser(description='Send the audit records to kinesis data stream.\
+    parser = argparse.ArgumentParser(description='Send the metric records to kinesis data stream.\
                                      This assumes that AWS_* vars are set')
 
     parser.add_argument('-t', '--time', type=str, required=True,
@@ -52,7 +52,7 @@ def main():
     aws_region = arg.region
     sleep_time = int(sleep_time_msec)/1000
     while True:
-        generate_app_logs(arg.kinesis + "-audit-logs-firehose")
+        generate_app_logs(arg.kinesis + "-metric-data-firehose")
         time.sleep(sleep_time)
 
 

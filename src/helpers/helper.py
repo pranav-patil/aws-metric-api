@@ -19,7 +19,7 @@ def reset_globals():
     HEADERS = None
     TOTAL_RESULTS = 0
 
-def fetch_audit_logs(start, stop, limit, order):
+def fetch_metric(start, stop, limit, order):
     if start == None:
         start = 0
     if stop == None:
@@ -32,7 +32,7 @@ def fetch_audit_logs(start, stop, limit, order):
     athena_client = boto3.client("athena")
     athena_workgroup = os.environ['ATHENA_WORKGROUP']
     named_query_ids = athena_client.list_named_queries(WorkGroup=athena_workgroup).get("NamedQueryIds")
-    named_query = get_audit_table_named_query(athena_client, named_query_ids)
+    named_query = get_metric_table_named_query(athena_client, named_query_ids)
     start_timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(start)))
     stop_timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(stop)))
 
@@ -55,7 +55,7 @@ def fetch_audit_logs(start, stop, limit, order):
         QueryString=query_string,
         QueryExecutionContext={"Database": named_query['NamedQuery']['Database']},
         ResultConfiguration={
-            "OutputLocation": ("s3://" + athena_workgroup + "-athena-bucket/output/")}
+            "OutputLocation": ("s3://" + athena_workgroup + "-metric-data/output/")}
     )
     query_execution_id = query_response["QueryExecutionId"]
     success = check_query_execution(athena_client, query_execution_id, 10)
@@ -77,7 +77,7 @@ def fetch_audit_logs(start, stop, limit, order):
 
     athena_client.close()
 
-def fetch_audit_logs_next_page(next_token):
+def fetch_metric_next_page(next_token):
     global page_size
     page_size -= 1
     formatted_next_token = next_token.replace(" ", "+")
@@ -116,9 +116,9 @@ def get_formatted_data(page):
     else:
         return {"Total Results": TOTAL_RESULTS, "Number of Rows": len(new_rows)-1, "Data": new_rows}
 
-def empty_audit_logs_bucket():
+def empty_metric_data_bucket():
     s3 = boto3.resource('s3')
-    bucket_name = os.environ['STACK_NAME'] + "-audit-logs-bucket"
+    bucket_name = os.environ['STACK_NAME'] + "-metric-data-bucket"
     bucket = s3.Bucket(bucket_name)
     bucket.objects.all().delete()
     return "All objects from bucket deleted."
@@ -161,12 +161,12 @@ def check_query_execution(athena_client, query_execution_id, max_execution=5):
     return False
 
 
-def get_audit_table_named_query(athena_client, named_query_ids):
+def get_metric_table_named_query(athena_client, named_query_ids):
     for query_id in named_query_ids:
         named_query = athena_client.get_named_query(NamedQueryId=query_id)
         query_name = named_query['NamedQuery']['Name']
 
-        if 'select_all_audit_logs' in query_name:
+        if 'select_all_metric_data' in query_name:
             return named_query
     return None
 
