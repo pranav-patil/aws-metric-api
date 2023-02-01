@@ -23,8 +23,8 @@ provider:
     serverSideEncryption: aws:kms
     sseKMSKeyId: ${ssm:metric_serverless_kms_key, null}
   iam:
-    role: !Sub arn:aws:iam::${AWS:AccountId}:role/metric_api_serverless_role
-    deploymentRole: arn:aws:iam::${AWS:AccountId}:role/MetricRoleForServerlessDeploy
+    role: !Sub arn:aws:iam::${aws:accountId}:role/metric_api_lambda_role
+    deploymentRole: arn:aws:iam::${aws:accountId}:role/MetricRoleForServerlessDeploy
   tracing:
     apiGateway: true
     lambda: ${opt:enable-xray, 'true'}
@@ -33,7 +33,6 @@ provider:
     CONNECT_TIMEOUT_SECONDS: ${opt:connect-timeout-seconds, '60'}
     READ_TIMEOUT_SECONDS: ${opt:read-timeout-seconds, '60'}
     MAX_RETRIES: ${opt:max-retries, '10'}
-    API_HOST: ${ssm:ApiHost, ''}
     LOG_LEVEL: ${opt:log-level, 'INFO'}
     ENABLE_XRAY: ${opt:enable-xray, 'true'}
     REGION: ${self:provider.region}
@@ -56,8 +55,9 @@ functions:
       - { Ref: PythonRequirementsLambdaLayer }
     package:
       include:
-        - api.py
-        - lib/**
+        - src/api.py
+        - src/helpers/**
+        - src/lib/**
     events:
       - http:
           method: any
@@ -67,15 +67,14 @@ functions:
           path: '{proxy+}'
     environment:
       TTL_DAYS: ${opt:ttl-days, '2'}
-      ATHENA_WORKGROUP: ${ssm:AthenaWorkGroup, ''}
+      ATHENA_WORKGROUP: ${ssm:${sls:stage}AthenaWorkGroup, ''}
       STACK_NAME: ${sls:stage}
 
 custom:
   resourceNamePrefix: ${self:service}-
-  cloudOneRegion: ${env:C1_REGION, 'us-1'}
   awsAccountId: ${file(./util/sts.js):getAccountId}
   wsgi:
-    app: api.app
+    app: src/api.app
     pythonBin: python3
     packRequirements: false
 

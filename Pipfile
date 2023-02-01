@@ -6,12 +6,13 @@ name = "pypi"
 [packages]
 boto3 = "*"
 aws-xray-sdk = "==2.8.0"
-request = "~=2.27.1"
+requests = "~=2.27.1"
 requests-aws4auth = "==1.1.2"
 cryptography = "==36.0.2"
 PyJWT = "==1.7.1"
 flask = "==2.0.2"
 Werkzeug = "==2.0.1"
+python-json-logger = "==2.0.2"
 
 [dev-packages]
 pytest = "*"

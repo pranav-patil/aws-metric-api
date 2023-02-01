@@ -117,14 +117,14 @@ data "aws_iam_policy_document" "lambda_assume_role" {
   }
 }
 
-resource "aws_iam_role" "health_events_lambda_role" {
-  name                 = "health_events_role"
+resource "aws_iam_role" "metric_api_lambda_role" {
+  name                 = "metric_api_lambda_role"
   assume_role_policy   = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
-resource "aws_iam_role_policy" "health_events_lambda_policy" {
-  name   = "health_events_role_policy"
-  role   = aws_iam_role.health_events_lambda_role.name
+resource "aws_iam_role_policy" "metric_api_lambda_policy" {
+  name   = "metric_api_lambda_role_policy"
+  role   = aws_iam_role.metric_api_lambda_role.name
 #  policy = data.aws_iam_policy_document.prometheus_query_iam_policy.json
   policy = jsonencode({
     # tfsec:ignore:aws-iam-no-policy-wildcards
@@ -152,9 +152,9 @@ data "aws_iam_policy_document" "cloudwatch_document" {
   }
 }
 
-resource "aws_iam_role_policy" "health_events_lambda_cloudwatch_policy" {
-  name   = "health_events_cloudwatch_policy"
-  role   = aws_iam_role.health_events_lambda_role.name
+resource "aws_iam_role_policy" "metric_api_lambda_cloudwatch_policy" {
+  name   = "metric_api_lambda_cloudwatch_policy"
+  role   = aws_iam_role.metric_api_lambda_role.name
   policy = data.aws_iam_policy_document.cloudwatch_document.json
 }
 
@@ -172,9 +172,9 @@ data "aws_iam_policy_document" "secretmanager_document" {
   }
 }
 
-resource "aws_iam_role_policy" "health_events_lambda_secrets_policy" {
-  name   = "health_events_secrets_policy"
-  role   = aws_iam_role.health_events_lambda_role.name
+resource "aws_iam_role_policy" "metric_api_lambda_secrets_policy" {
+  name   = "metric_api_lambda_secrets_policy"
+  role   = aws_iam_role.metric_api_lambda_role.name
   policy = data.aws_iam_policy_document.secretmanager_document.json
 }
 
@@ -191,9 +191,9 @@ data "aws_iam_policy_document" "metric_alert_sns_document" {
   }
 }
 
-resource "aws_iam_role_policy" "health_events_lambda_sns_policy" {
-  name   = "health_events_lambda_sns_policy"
-  role   = aws_iam_role.health_events_lambda_role.name
+resource "aws_iam_role_policy" "metric_api_lambda_sns_policy" {
+  name   = "metric_api_lambda_sns_policy"
+  role   = aws_iam_role.metric_api_lambda_role.name
   policy = data.aws_iam_policy_document.metric_alert_sns_document.json
 }
 
@@ -212,10 +212,37 @@ data "aws_iam_policy_document" "xray_document" {
   }
 }
 
-resource "aws_iam_role_policy" "health_events_lambda_xray_policy" {
-  name   = "health_events_xray_policy"
-  role   = aws_iam_role.health_events_lambda_role.name
+resource "aws_iam_role_policy" "metric_api_lambda_xray_policy" {
+  name   = "metric_api_lambda_xray_policy"
+  role   = aws_iam_role.metric_api_lambda_role.name
   policy = data.aws_iam_policy_document.xray_document.json
+}
+
+data "aws_iam_policy_document" "athena_document" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "athena:StartQueryExecution",
+      "athena:StopQueryExecution",
+      "athena:GetQueryExecution",
+      "athena:GetQueryResults",
+      "athena:CreateNamedQuery",
+      "athena:GetNamedQuery",
+      "athena:ListNamedQueries",
+      "athena:BatchGetNamedQuery"
+    ]
+
+    resources = [
+      aws_athena_workgroup.metric_data.arn
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "metric_api_lambda_athena_policy" {
+  name   = "metric_api_lambda_athena_policy"
+  role   = aws_iam_role.metric_api_lambda_role.name
+  policy = data.aws_iam_policy_document.athena_document.json
 }
 
 data "aws_iam_policy" "redshift_data_policy" {
@@ -223,7 +250,7 @@ data "aws_iam_policy" "redshift_data_policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_redshift_data_policy" {
-  role       = aws_iam_role.health_events_lambda_role.name
+  role       = aws_iam_role.metric_api_lambda_role.name
   policy_arn = data.aws_iam_policy.redshift_data_policy.arn
 }
 
@@ -241,9 +268,9 @@ data "aws_iam_policy_document" "lambda_kms" {
   }
 }
 
-resource "aws_iam_role_policy" "health_events_lambda_kms_policy" {
-  name   = "health_events_kms_policy"
-  role   = aws_iam_role.health_events_lambda_role.name
+resource "aws_iam_role_policy" "metric_api_lambda_kms_policy" {
+  name   = "metric_api_lambda_kms_policy"
+  role   = aws_iam_role.metric_api_lambda_role.name
   policy = data.aws_iam_policy_document.lambda_kms.json
 }
 
@@ -259,9 +286,9 @@ data "aws_iam_policy_document" "ssm_read_access_policy_document" {
   }
 }
 
-resource "aws_iam_role_policy" "health_events_lambda_ssm_policy" {
-  name   = "health_events_ssm_policy"
-  role   = aws_iam_role.health_events_lambda_role.name
+resource "aws_iam_role_policy" "metric_api_lambda_ssm_policy" {
+  name   = "metric_api_lambda_ssm_policy"
+  role   = aws_iam_role.metric_api_lambda_role.name
   policy = data.aws_iam_policy_document.ssm_read_access_policy_document.json
 }
 

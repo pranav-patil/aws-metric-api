@@ -4,11 +4,6 @@ Metric API is a sample serverless application which demonstrates the [serverless
 The Metric API uses Python Flask API to exposes HTTP APIs.
 A single function configuration `api`, is used for handling all incoming requests thanks to configured `http` events. To learn more about `http` event configuration options, please refer to [http event docs](https://www.serverless.com/framework/docs/providers/aws/events/apigateway/). As the events are configured in a way to accept all incoming requests, `Flask` framework is responsible for routing and handling requests internally. The implementation takes advantage of `serverless-wsgi`, which allows you to wrap WSGI applications such as Flask apps. To learn more about `serverless-wsgi`, please refer to corresponding [GitHub repository](https://github.com/logandk/serverless-wsgi). Additionally, the template relies on `serverless-python-requirements` plugin for packaging dependencies from `requirements.txt` file. For more details about `serverless-python-requirements` configuration, please refer to corresponding [GitHub repository](https://github.com/UnitedIncome/serverless-python-requirements).
 
-```bash
-python3.8 -m venv ./venv
-source ./venv/bin/activate
-```
-
 ## Setup
 
 1. Install [Docker](https://docs.docker.com/get-docker/).
@@ -39,14 +34,17 @@ pip install aws-adfs
 9. Login using aws-adfs using AWS credentials.
 
 ```bash
-aws-adfs login --adfs-host="HOST" --session-duration "43200" --region "REGION" --no-sspi --profile "PROFILE_NAME" --role-arn ? 
+aws-adfs login --adfs-host="HOST" --session-duration "43200" --region "REGION" --no-sspi --profile "AWS_PROFILE_NAME" --role-arn ?
+export AWS_PROFILE=<AWS_PROFILE_NAME>
+export AWS_DEFAULT_REGION=<REGION>
+aws sts get-caller-identity 
 ```
 10. Setup AWS infrastructure using Terragrunt with below commands.
 
 ```bash
 terragrunt init
 terragrunt plan
-terragrunt apply 
+terragrunt apply -auto-approve 
 ```
 
 ## Deploy
@@ -57,7 +55,7 @@ terragrunt apply
 npx sls plugin install --name=serverless-python-requirements
 ```
 
-2. Deploy all the serverless lambda using the provided `STACK_NAME`.
+2. Deploy all the serverless lambda using the provided `STACK_NAME`. The `STACK_NAME` should match with `cluster_name` in `tf/variables.tf`, which by default is `emprovise-demo`. Please start local docker instance before using below serverless deploy command.  
 
 ```bash
 npx sls deploy --region <REGION> --stage <STACK_NAME> --verbose
@@ -75,10 +73,11 @@ Run the specified function in your local workspace, were `event.json` contains i
 sls invoke local --stage <STACK_NAME> --region=<REGION> --function=<LAMBDA_NAME> --path=event.json
 ```
 
-### Remove Serverless 
+### Remove Serverless and Terraform Infrastructure
 
 Remove the lambdas from AWS
 
 ```bash
 sls remove --stage <STACK_NAME> --region=<REGION>
+terragrunt destroy -auto-approve -input=false
 ```

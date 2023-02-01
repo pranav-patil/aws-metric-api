@@ -18,5 +18,5 @@ module.exports.getKmsKeyArn = async ({ resolveVariable }) => {
     const AWS = require("aws-sdk");
     const region = await resolveVariable('opt:region, self:provider.region, "us-west-1"');
     const kms = new AWS.KMS({ region });
-    return await callDescribeKey(kms, "alias/KMS-c1apphealth");
+    return await callDescribeKey(kms, "alias/KMS-emprovise-app");
 };

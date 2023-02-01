@@ -2,13 +2,22 @@
   "name": "metric-api",
   "version": "1.0.0",
   "description": "Metrics Python Flask API service with traditional Serverless Framework",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "license": "UNLICENSED",
   "private": true,
   "author": "Pranav Patil",
   "devDependencies": {
-    "serverless": "^2.9.0",
-    "serverless-python-requirements": "^5.1.0",
-    "serverless-wsgi": "^2.0.2"
+    "@redocly/openapi-cli": "^1.0.0-beta.95",
+    "@serverless/safeguards-plugin": "^1.2.1",
+    "npm-check-updates": "^16.0.5",
+    "serverless": "^3.21.0",
+    "serverless-plugin-aws-alerts": "^1.7.5",
+    "serverless-plugin-ifelse": "^1.0.7",
+    "serverless-prune-plugin": "^2.0.1",
+    "serverless-python-requirements": "^5.4.0",
+    "serverless-wsgi": "^3.0.0"
   },
   "dependencies": {
     "aws-sdk": "^2.954.0"

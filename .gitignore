@@ -15,10 +15,16 @@ venv
 # Local .terraform directories
 **/.terraform/*
 tfplan
+**/.terraform.lock.hcl
 
 # .tfstate files
 *.tfstate
 *.tfstate.*
+
+# serverless wsgi
+.serverless-wsgi
+serverless_wsgi.py
+wsgi_handler.py
 
 # Crash log files
 crash.log
